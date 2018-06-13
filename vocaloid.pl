@@ -1,11 +1,3 @@
-% vocaloid(Cantante).
-vocaloid(megurineLuka).
-vocaloid(hatsumeMiku).
-vocaloid(gumi).
-vocaloid(seeU).
-vocaloid(kaito).
-vocaloid(fede).
-
 % sabeCantar(Vocaloid, Cancion)
 sabeCantar(megurineLuka, cancion(nightFever, 4)).
 sabeCantar(megurineLuka, cancion(foreverYoung, 5)).
@@ -26,8 +18,8 @@ esNovedoso(Vocaloid):-
 
 % cancionesConDuracionMayorA(Vocaloid, Minutos)
 cancionesConDuracionMayorA(Vocaloid, Minutos):-
-    vocaloid(Vocaloid),
-    foreach(sabeCantar(Vocaloid, Cancion), duracionSuperiorA(Cancion, Minutos)).
+    sabeCantar(Vocaloid, Cancion),
+    duracionSuperiorA(Cancion, Minutos).
 
 % cantidadCanciones(Vocaloid)
 cantidadCanciones(Vocaloid):-
@@ -44,7 +36,7 @@ duracionSuperiorA(cancion(_, Duracion), Minutos):-
 
 % esAcelerado(Vocaloid)
 esAcelerado(Vocaloid):-
-    vocaloid(Vocaloid),
+    sabeCantar(Vocaloid, Cancion),
     forall(sabeCantar(Vocaloid, Cancion), duracionMenorQue(Cancion, 4)).
 
 duracionMenorQue(cancion(_, Duracion), Minutos):-
@@ -64,16 +56,25 @@ puedeParticiparEn(Vocaloid, Concierto):-
 puedeParticiparEn(hatsumeMiku, Concierto):-
 	concierto(Concierto, _, _ , _).
 
+% cumpleCondicionesConcierto(Vocaloid, gigante(Duracion))
 cumpleCondicionesConcierto(Vocaloid, gigante(Duracion)):-
 	esNovedosoOAcelerado(Vocaloid),
 	forall(sabeCantar(Vocaloid, Cancion), duracionMenorQue(Cancion, Duracion)).
-	
-cumpleCondicionesConcierto(Vocaloid, mediano(NombreCancion)):-
-	sabeCantar(Vocaloid, cancion(NombreCancion, _)).
-		
+			
+% cumpleCondicionesConcierto(Vocaloid, pequenio(DuracionMinima))			
 cumpleCondicionesConcierto(Vocaloid, pequenio(DuracionMinima)):-
 	forall(sabeCantar(Vocaloid, Cancion), duracionSuperiorA(Cancion, DuracionMinima)).
 
+% cumpleCondicionesConcierto(Vocaloid, mediano(NombreCancion))
+cumpleCondicionesConcierto(Vocaloid, mediano(NombreCancion)):-
+	sabeCantar(Vocaloid, Cancion),
+	conoceCancion(Cancion, NombreCancion).
+
+% conoceCancion(cancion(NombreCancion,_), Nombre)
+conoceCancion(cancion(NombreCancion,_), Nombre):-
+	NombreCancion == Nombre.
+
+% esNovedosoOAcelerado(Vocaloid)
 esNovedosoOAcelerado(Vocaloid):-
 	esNovedoso(Vocaloid).
 esNovedosoOAcelerado(Vocaloid):-	
@@ -81,26 +82,46 @@ esNovedosoOAcelerado(Vocaloid):-
 
 % masFamoso(Vocaloid).
 masFamoso(Vocaloid):-
-	vocaloid(Vocaloid),
-	concierto(Concierto, _, _, _),
-	findall(Vocaloid, famaTotal(Vocaloid, Concierto), Ws).
+	sabeCantar(Vocaloid, _),
+	famaTotal(Vocaloid, FamaTotal),
+	forall(sabeCantar(Vocaloid2, _), tieneMenosFamaQue(Vocaloid2, FamaTotal)).	
 
-famaTotal(Vocaloid, Concierto):-
-	findall(W, (concierto(Concierto, _, W, _), puedeParticiparEn(Vocaloid, Concierto)), Ws), 
-	sumlist(Ws, Concierto),
-	nombre(Vocaloid, N),
-	N is (Concierto + Concierto) * N.
+% famaTotal(Vocaloid, Total)	
+famaTotal(Vocaloid, Total):-
+	findall(Fama, (puedeParticiparEn(Vocaloid, Concierto), concierto(Concierto, _, Fama, _)), Total2),
+	sumarFama(Total2, Total).
+
+% sumarFama(List, Sum)
+sumarFama(List, Sum) :-
+    sumarFama(List, 0, Sum).
+sumarFama([], Accumulator, Accumulator).
+sumarFama([Head|Tail], Accumulator, Result) :-
+    NewAccumulator is Accumulator + Head,
+    sumarFama(Tail, NewAccumulator, Result).
+
+% tieneMenosFamaQue(Vocaloid, Fama)	
+tieneMenosFamaQue(Vocaloid, Fama):-
+	famaTotal(Vocaloid, FamaVocaloid),
+	Fama >= FamaVocaloid.
 	
+% nombre(Vocaloid, N)
 nombre(Vocaloid, N):-
-	vocaloid(Vocaloid),
 	atom_length(Vocaloid, N).
 
+% conoce(Vocaloid, OtroVocaloid).
 conoce(megurineLuka, hatsumeMiku).
 conoce(megurineLuka, gumi).
 conoce(gumi, seeU).
 conoce(seeU, kaito).
 
-unicoVocaloidEnConcierto(Vocaloid):-
-	conoce(Vocaloid, OtroVocaloid),
-	Vocaloid \= OtroVocaloid,
+% esElUnicoQueParticipa(Vocaloid, Concierto)
+esElUnicoQueParticipa(Vocaloid, Concierto):-
+	puedeParticiparEn(Vocaloid, Concierto),
+	forall(esConocido(Vocaloid, OtroVocaloid), not(puedeParticiparEn(OtroVocaloid, Concierto))).
 	
+% esConocido(Vocaloid, OtroVocaloid)	
+esConocido(Vocaloid, OtroVocaloid):-
+	conoce(Vocaloid, OtroVocaloid).
+esConocido(Vocaloid, OtroVocaloid):-
+	conoce(Vocaloid, TercerVocaloid),
+	esConocido(TercerVocaloid, OtroVocaloid).
