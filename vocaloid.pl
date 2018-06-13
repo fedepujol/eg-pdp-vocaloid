@@ -1,127 +1,134 @@
-% sabeCantar(Vocaloid, Cancion)
-sabeCantar(megurineLuka, cancion(nightFever, 4)).
-sabeCantar(megurineLuka, cancion(foreverYoung, 5)).
-sabeCantar(hatsumeMiku, cancion(tellYourWorld, 4)).
-sabeCantar(gumi, cancion(foreverYoung, 4)).
-sabeCantar(gumi, cancion(tellYourWorld, 5)).
-sabeCantar(seeU, cancion(novemberRain, 6)).
-sabeCantar(seeU, cancion(tellYourWorld, 5)).
-sabeCantar(fede, cancion(aloha, 3)).
+sabeCantar(megurineLuka, cancion(nightFever,4)).
+sabeCantar(megurineLuka, cancion(foreverYoung,5)).
+sabeCantar(hatsuneMiku, cancion(tellYourWorld,4)).
+sabeCantar(gumi, cancion(foreverYoung,4)).
+sabeCantar(gumi, cancion(tellYourWorld,5)).
+sabeCantar(seeU, cancion(novemberRain,6)).
+sabeCantar(seeU, cancion(nightFever,5)).
 
-% esNovedoso(Vocaloid)
-esNovedoso(Vocaloid):-
-    tiene2Canciones(Vocaloid),
-    cancionesConDuracionMayorA(Vocaloid, 5).
+esNovedoso(Vocaloid) :-
+    sabeDosCanciones(Vocaloid),
+    sabeAlgunaMayorA(Vocaloid, 5).
 
-esNovedoso(Vocaloid):-
-    cancionesConDuracionMayorA(Vocaloid, 10).
+esNovedoso(Vocaloid) :-
+    sabeAlgunaMayorA(Vocaloid, 10).
 
-% cancionesConDuracionMayorA(Vocaloid, Minutos)
-cancionesConDuracionMayorA(Vocaloid, Minutos):-
-    sabeCantar(Vocaloid, Cancion),
-    duracionSuperiorA(Cancion, Minutos).
+sabeDosCanciones(Vocaloid) :-
+    sabeCantar(Vocaloid,Cancion1),
+    sabeCantar(Vocaloid,Cancion2),
+    titulosDiferentes(Cancion1,Cancion2).
 
-% cantidadCanciones(Vocaloid)
-cantidadCanciones(Vocaloid):-
-    aggregate(count, sabeCantar(Vocaloid, _), _).
+titulosDiferentes(Cancion1,Cancion2) :-
+    titulo(Cancion1,Titulo1),
+    titulo(Cancion2,Titulo2),
+    Titulo1 \= Titulo2.
 
-% tiene2Canciones(Vocaloid)
-tiene2Canciones(Vocaloid):-
-    aggregate(count, cantidadCanciones(Vocaloid), Count),
-    Count is 2.
+titulo(cancion(Titulo1,_),Titulo1).
 
-% duracionSuperiorA(Cancion, Minutos)
-duracionSuperiorA(cancion(_, Duracion), Minutos):-
-    Duracion > Minutos.
+sabeAlgunaMayorA(Vocaloid, Duracion) :-
+    sabeCantar(Vocaloid,Cancion),
+    duracion(Cancion, Duracion1),
+    Duracion1 > Duracion.
 
-% esAcelerado(Vocaloid)
-esAcelerado(Vocaloid):-
-    sabeCantar(Vocaloid, Cancion),
-    forall(sabeCantar(Vocaloid, Cancion), duracionMenorQue(Cancion, 4)).
+duracion(cancion(_,Duracion),Duracion).
 
-duracionMenorQue(cancion(_, Duracion), Minutos):-
-    Duracion =< Minutos.
+esAcelerado(Vocaloid) :-
+    sabeCantar(Vocaloid,_),
+    todasCancionesMasCortasQue(Vocaloid,4).
 
-% concierto(Concierto).
-concierto(mikuExpo, pais(estadosUnidos), 2000, gigante(6)).
-concierto(magicalMirai, pais(japon), 3000, gigante(10)).
-concierto(vocalektVisions, pais(estadosUnidos), 1000, mediano(novemberRain)).
-concierto(mikuFest, pais(argentina), 100, pequenio(4)).
+duracionMenorA(Cancion,Duracion) :-
+    duracion(Cancion,Duracion1),
+    Duracion1 =< Duracion.
 
-% puedeParticiparEn(Vocaloid, Concierto).
-puedeParticiparEn(Vocaloid, Concierto):-
-	concierto(Concierto, _ , _, Tipo),
-	cumpleCondicionesConcierto(Vocaloid, Tipo).
+concierto(mikuExpo, eeuu, 2000, gigante(6)).
+concierto(magicalMirai, japon, 3000, gigante(10)).
+concierto(vocalektVisions, eeuu, 1000, mediano(novemberRain)).
+concierto(mikuFest, argentina, 100, pequenio(4)).
 
-puedeParticiparEn(hatsumeMiku, Concierto):-
-	concierto(Concierto, _, _ , _).
+condicion(Concierto,Condicion) :-
+    concierto(Concierto,_,_,Condicion).
 
-% cumpleCondicionesConcierto(Vocaloid, gigante(Duracion))
-cumpleCondicionesConcierto(Vocaloid, gigante(Duracion)):-
-	esNovedosoOAcelerado(Vocaloid),
-	forall(sabeCantar(Vocaloid, Cancion), duracionMenorQue(Cancion, Duracion)).
-			
-% cumpleCondicionesConcierto(Vocaloid, pequenio(DuracionMinima))			
-cumpleCondicionesConcierto(Vocaloid, pequenio(DuracionMinima)):-
-	forall(sabeCantar(Vocaloid, Cancion), duracionSuperiorA(Cancion, DuracionMinima)).
+puedeParticipar(hatsuneMiku,Concierto) :-
+    concierto(Concierto,_,_,_).
 
-% cumpleCondicionesConcierto(Vocaloid, mediano(NombreCancion))
-cumpleCondicionesConcierto(Vocaloid, mediano(NombreCancion)):-
-	sabeCantar(Vocaloid, Cancion),
-	conoceCancion(Cancion, NombreCancion).
 
-% conoceCancion(cancion(NombreCancion,_), Nombre)
-conoceCancion(cancion(NombreCancion,_), Nombre):-
-	NombreCancion == Nombre.
+puedeParticipar(Vocaloid,Concierto) :-
+    condicion(Concierto,Condicion),
+    cumpleCondicion(Vocaloid,Condicion).
+    %condicion(Concierto,Condicion),
+    
 
-% esNovedosoOAcelerado(Vocaloid)
-esNovedosoOAcelerado(Vocaloid):-
-	esNovedoso(Vocaloid).
-esNovedosoOAcelerado(Vocaloid):-	
-	esAcelerado(Vocaloid).
+cumpleCondicion(Vocaloid, gigante(Duracion)) :-
+    novedosoOAcelerado(Vocaloid),
+    todasCancionesMasCortasQue(Vocaloid,Duracion).
 
-% masFamoso(Vocaloid).
-masFamoso(Vocaloid):-
-	sabeCantar(Vocaloid, _),
-	famaTotal(Vocaloid, FamaTotal),
-	forall(sabeCantar(Vocaloid2, _), tieneMenosFamaQue(Vocaloid2, FamaTotal)).	
+cumpleCondicion(Vocaloid, mediano(Titulo)) :-
+    sabeCantar(Vocaloid,Cancion),
+    titulo(Cancion,Titulo).
 
-% famaTotal(Vocaloid, Total)	
-famaTotal(Vocaloid, Total):-
-	findall(Fama, (puedeParticiparEn(Vocaloid, Concierto), concierto(Concierto, _, Fama, _)), Total2),
-	sumarFama(Total2, Total).
+cumpleCondicion(Vocaloid, pequenio(Duracion)) :-
+    sabeAlgunaMayorA(Vocaloid, Duracion).
 
-% sumarFama(List, Sum)
-sumarFama(List, Sum) :-
-    sumarFama(List, 0, Sum).
-sumarFama([], Accumulator, Accumulator).
-sumarFama([Head|Tail], Accumulator, Result) :-
-    NewAccumulator is Accumulator + Head,
-    sumarFama(Tail, NewAccumulator, Result).
+todasCancionesMasCortasQue(Vocaloid,Duracion) :-    
+    sabeCantar(Vocaloid,_),
+    forall(sabeCantar(Vocaloid,Cancion), duracionMenorA(Cancion, Duracion)).
 
-% tieneMenosFamaQue(Vocaloid, Fama)	
-tieneMenosFamaQue(Vocaloid, Fama):-
-	famaTotal(Vocaloid, FamaVocaloid),
-	Fama >= FamaVocaloid.
-	
-% nombre(Vocaloid, N)
-nombre(Vocaloid, N):-
-	atom_length(Vocaloid, N).
+novedosoOAcelerado(Vocaloid) :-
+    esNovedoso(Vocaloid).
 
-% conoce(Vocaloid, OtroVocaloid).
-conoce(megurineLuka, hatsumeMiku).
-conoce(megurineLuka, gumi).
-conoce(gumi, seeU).
-conoce(seeU, kaito).
+novedosoOAcelerado(Vocaloid) :-
+    esAcelerado(Vocaloid).
 
-% esElUnicoQueParticipa(Vocaloid, Concierto)
-esElUnicoQueParticipa(Vocaloid, Concierto):-
-	puedeParticiparEn(Vocaloid, Concierto),
-	forall(esConocido(Vocaloid, OtroVocaloid), not(puedeParticiparEn(OtroVocaloid, Concierto))).
-	
-% esConocido(Vocaloid, OtroVocaloid)	
-esConocido(Vocaloid, OtroVocaloid):-
-	conoce(Vocaloid, OtroVocaloid).
-esConocido(Vocaloid, OtroVocaloid):-
-	conoce(Vocaloid, TercerVocaloid),
-	esConocido(TercerVocaloid, OtroVocaloid).
+%3
+
+elMasFamoso(Vocaloid) :-
+    sabeCantar(Vocaloid,_),
+    calcularFama(Vocaloid,FamaTotal),
+    forall(sabeCantar(Vocaloid2,_),tieneMenosFama(Vocaloid2,FamaTotal)).
+
+tieneMenosFama(Vocaloid,Fama) :-
+    calcularFama(Vocaloid,FamaTotal),
+    FamaTotal =< Fama.
+
+calcularFama(Vocaloid,FamaTotal) :-
+    cantidadLetrasNombre(Vocaloid,Cantidad),
+    mayorFamaConcierto(Vocaloid,Fama),
+    multiplicar(Fama,Cantidad, FamaTotal).
+
+famaConcierto(Concierto,Fama) :-
+    concierto(Concierto,_,Fama,_).
+
+daMenosFama(Concierto, Fama) :-
+    famaConcierto(Concierto, FamaConcierto),
+    FamaConcierto =< Fama.
+
+cantidadLetrasNombre(Vocaloid,Cantidad) :-
+    sabeCantar(Vocaloid,_),
+    atom_length(Vocaloid,Cantidad).
+
+multiplicar(X,Y,Z) :-
+    Z is X*Y.
+
+mayorFamaConcierto(Vocaloid,Fama) :-
+    sabeCantar(Vocaloid,_),
+    puedeParticipar(Vocaloid,Concierto1),
+    famaConcierto(Concierto1,Fama),
+    forall(puedeParticipar(Vocaloid,Concierto), daMenosFama(Concierto,Fama)).
+
+%4
+conoceA(megurineLuka,hatsuneMiku).
+conoceA(megurineLuka,gumi).
+conoceA(gumi,seeU).
+conoceA(seeU,kaito).
+
+esConocido(Vocaloid,OtroVocaloid) :-
+    conoceA(Vocaloid,OtroVocaloid).
+
+esConocido(Vocaloid, OtroVocaloid) :-
+    conoceA(Vocaloid,OtroVocaloid2),
+    esConocido(OtroVocaloid2,OtroVocaloid).
+
+esElUnicoQueParticipa(Vocaloid,Concierto) :-
+    sabeCantar(Vocaloid,_),
+    puedeParticipar(Vocaloid,Concierto),
+    forall(esConocido(Vocaloid,OtroVocaloid), not(puedeParticipar(OtroVocaloid,Concierto))).
